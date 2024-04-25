@@ -1,17 +1,17 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema;
+namespace Oh86\LaravelYashan\Schema;
 
 use Illuminate\Database\Connection;
-use Illuminate\Support\Str;
-use Lmo\LaravelDm8\Dm8ReservedWords;
+use Oh86\LaravelYashan\YSConnection;
+use Oh86\LaravelYashan\YSReservedWords;
 
 class Trigger
 {
-    use Dm8ReservedWords;
+    use YSReservedWords;
 
     /**
-     * @var \Illuminate\Database\Connection|DmConnection
+     * @var YSConnection
      */
     protected $connection;
 

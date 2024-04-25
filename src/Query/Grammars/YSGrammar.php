@@ -1,15 +1,15 @@
 <?php
 
-namespace Lmo\LaravelDm8\Query\Grammars;
+namespace Oh86\LaravelYashan\Query\Grammars;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
-use Lmo\LaravelDm8\Dm8ReservedWords;
+use Oh86\LaravelYashan\YSReservedWords;
 
-class DmGrammar extends Grammar
+class YSGrammar extends Grammar
 {
-    use Dm8ReservedWords;
+    use YSReservedWords;
 
     /**
      * The keyword identifier wrapper format.
@@ -281,7 +281,8 @@ class DmGrammar extends Grammar
             return $value;
         }
 
-        return '`'.str_replace('"', '""', $value).'`';
+        // return '`'.str_replace('"', '""', $value).'`';
+        return sprintf('"%s"', $value);
     }
 
     /**

@@ -1,15 +1,18 @@
 <?php
 
-namespace Lmo\LaravelDm8\Eloquent;
+namespace Oh86\LaravelYashan\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as IlluminateQueryBuilder;
-use Lmo\LaravelDm8\Dm8Connection;
-use Lmo\LaravelDm8\Query\Grammars\DmGrammar;
-use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
+use Oh86\LaravelYashan\YSConnection;
+use Oh86\LaravelYashan\Query\Grammars\YSGrammar;
+use Oh86\LaravelYashan\Query\YSBuilder as QueryBuilder;
 
-class DmEloquent extends Model
+/**
+ * @deprecated
+ */
+class YSEloquent extends Model
 {
     /**
      * List of binary (blob) columns.
@@ -168,7 +171,7 @@ class DmEloquent extends Model
         $conn = $this->getConnection();
         $grammar = $conn->getQueryGrammar();
 
-        if ($grammar instanceof DmGrammar) {
+        if ($grammar instanceof YSGrammar) {
             return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
         }
 

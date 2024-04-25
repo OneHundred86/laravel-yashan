@@ -1,9 +1,9 @@
 <?php
-namespace Lmo\LaravelDm8\DBAL;
+namespace Oh86\LaravelYashan\DBAL;
 
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
 
-class DmSchemaManager extends AbstractSchemaManager
+class YSSchemaManager extends AbstractSchemaManager
 {
     protected function _getPortableViewDefinition($view)
     {

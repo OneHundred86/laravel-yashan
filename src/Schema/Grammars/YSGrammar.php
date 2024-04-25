@@ -1,17 +1,17 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema\Grammars;
+namespace Oh86\LaravelYashan\Schema\Grammars;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Grammars\Grammar;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
-use Lmo\LaravelDm8\Dm8ReservedWords;
+use Oh86\LaravelYashan\YSReservedWords;
 
-class DmGrammar extends Grammar
+class YSGrammar extends Grammar
 {
-    use Dm8ReservedWords;
+    use YSReservedWords;
 
     /**
      * The keyword identifier wrapper format.
@@ -71,7 +71,7 @@ class DmGrammar extends Grammar
 
         $sql .= ' )';
 
-        echo 'SQL: ' . $sql . "\n";
+        // echo 'SQL: ' . $sql . "\n";
 
         return $sql;
     }

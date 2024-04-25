@@ -1,12 +1,12 @@
 <?php
 
-namespace Lmo\LaravelDm8\DBAL;
+namespace Oh86\LaravelYashan\DBAL;
 
 use Doctrine\DBAL\Platforms\Keywords\KeywordList;
-use Lmo\LaravelDm8\Dm8ReservedWords;
+use Oh86\LaravelYashan\YSReservedWords;
 
-class DmKeywords extends KeywordList {
-    use Dm8ReservedWords;
+class YSKeywords extends KeywordList {
+    use YSReservedWords;
 
     public function getName()
     {

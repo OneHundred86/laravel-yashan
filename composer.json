@@ -1,8 +1,8 @@
 {
-    "name": "lmo/laravel-dm8",
+    "name": "oh86/laravel-yashan",
     "autoload": {
         "psr-4": {
-            "Lmo\\LaravelDm8\\": "src/"
+            "Oh86\\LaravelYashan\\": "src/"
         },
         "files": [
             
@@ -10,17 +10,22 @@
     },
     "authors": [
         {
-            "name": "lxrmido",
-            "email": "lxrmido@lxrmido.com"
+            "name": "chengj",
+            "email": "chen.gj@qq.com"
         }
     ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-pdo": "*",
+        "ext-pdo_odbc": "*"
+    },
     "extra": {
         "branch-alias": {
             "dev-main": "1.0-dev"
         },
         "laravel": {
             "providers": [
-                "Lmo\\LaravelDm8\\Dm8ServiceProvider"
+              "Oh86\\LaravelYashan\\YSServiceProvider"
             ]
         }
     }

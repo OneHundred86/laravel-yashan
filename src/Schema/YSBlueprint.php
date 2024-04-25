@@ -1,10 +1,10 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema;
+namespace Oh86\LaravelYashan\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
 
-class DmBlueprint extends Blueprint
+class YSBlueprint extends Blueprint
 {
     /**
      * Table comment.

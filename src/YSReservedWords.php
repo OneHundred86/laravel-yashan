@@ -1,10 +1,10 @@
 <?php
 
-namespace Lmo\LaravelDm8;
+namespace Oh86\LaravelYashan;
 
 use Illuminate\Support\Str;
 
-trait Dm8ReservedWords
+trait YSReservedWords
 {
     /**
      * Lists of reserved words.

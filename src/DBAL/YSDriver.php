@@ -1,10 +1,10 @@
 <?php
 
-namespace Lmo\LaravelDm8\DBAL;
-use Lmo\LaravelDm8\DBAL\DmPlatform;
-use Lmo\LaravelDm8\DBAL\DmSchemaManager;
+namespace Oh86\LaravelYashan\DBAL;
+use Oh86\LaravelYashan\DBAL\YSPlatform;
+use Oh86\LaravelYashan\DBAL\YSSchemaManager;
 
-class DmDriver implements \Doctrine\DBAL\Driver
+class YSDriver implements \Doctrine\DBAL\Driver
 {
 
     public function connect(array $params, $username = null, $password = null, array $driverOptions = array())
@@ -53,12 +53,12 @@ class DmDriver implements \Doctrine\DBAL\Driver
 
     public function getDatabasePlatform()
     {
-        return new DmPlatform();
+        return new YSPlatform();
     }
 
     public function getSchemaManager(\Doctrine\DBAL\Connection $conn)
     {
-        return new DmSchemaManager($conn);
+        return new YSSchemaManager($conn);
     }
 
     public function getName()

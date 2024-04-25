@@ -1,11 +1,11 @@
 <?php
 
-namespace Lmo\LaravelDm8\Validation;
+namespace Oh86\LaravelYashan\Validation;
 
 use Illuminate\Validation\DatabasePresenceVerifier;
-use Lmo\LaravelDm8\Dm8Connection;
+use Oh86\LaravelYashan\YSConnection;
 
-class Dm8DatabasePresenceVerifier extends DatabasePresenceVerifier
+class YSDatabasePresenceVerifier extends DatabasePresenceVerifier
 {
     /**
      * Count the number of objects in a collection having the given value.
@@ -22,7 +22,7 @@ class Dm8DatabasePresenceVerifier extends DatabasePresenceVerifier
     {
         $connection = $this->table($collection)->getConnection();
 
-        if (! $connection instanceof Dm8Connection) {
+        if (! $connection instanceof YSConnection) {
             return parent::getCount($collection, $column, $value, $excludeId, $idColumn, $extra);
         }
 
@@ -46,7 +46,7 @@ class Dm8DatabasePresenceVerifier extends DatabasePresenceVerifier
     {
         $connection = $this->table($collection)->getConnection();
 
-        if (! $connection instanceof Dm8Connection) {
+        if (! $connection instanceof YSConnection) {
             return parent::getMultiCount($collection, $column, $values, $extra);
         }
 

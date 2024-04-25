@@ -1,13 +1,13 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema;
+namespace Oh86\LaravelYashan\Schema;
 
 use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Builder;
-use Lmo\LaravelDm8\Schema\DmBlueprint;
+use Oh86\LaravelYashan\Schema\YSBlueprint;
 
-class DmBuilder extends Builder
+class YSBuilder extends Builder
 {
     /**
      * @var OracleAutoIncrementHelper
@@ -25,7 +25,7 @@ class DmBuilder extends Builder
     public function __construct(Connection $connection)
     {
         parent::__construct($connection);
-        $this->helper = new DmAutoIncrementHelper($connection);
+        $this->helper = new YSAutoIncrementHelper($connection);
         $this->comment = new Comment($connection);
     }
 
@@ -60,7 +60,7 @@ class DmBuilder extends Builder
      */
     protected function createBlueprint($table, Closure $callback = null)
     {
-        $blueprint = new DmBlueprint($table, $callback);
+        $blueprint = new YSBlueprint($table, $callback);
         $blueprint->setTablePrefix($this->connection->getTablePrefix());
 
         return $blueprint;
@@ -116,12 +116,14 @@ class DmBuilder extends Builder
      * Indicate that the table should be dropped if it exists.
      *
      * @param  string  $table
-     * @return \Illuminate\Support\Fluent
      */
     public function dropIfExists($table)
     {
         $this->helper->dropAutoIncrementObjects($table);
-        parent::dropIfExists($table);
+//        parent::dropIfExists($table);
+        if ($this->hasTable($table)) {
+            $this->drop($table);
+        }
     }
 
     /**
@@ -135,7 +137,7 @@ class DmBuilder extends Builder
         $grammar = $this->grammar;
         $sql = $grammar->compileTableExists();
 
-        $database = $this->connection->getConfig('username');
+        $database = $this->connection->getConfig('database');
         if ($this->connection->getConfig('prefix_schema')) {
             $database = $this->connection->getConfig('prefix_schema');
         }

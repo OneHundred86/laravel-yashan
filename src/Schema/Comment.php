@@ -1,14 +1,14 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema;
+namespace Oh86\LaravelYashan\Schema;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Grammars\Grammar;
-use Lmo\LaravelDm8\Dm8ReservedWords;
+use Oh86\LaravelYashan\YSReservedWords;
 
 class Comment extends Grammar
 {
-    use Dm8ReservedWords;
+    use YSReservedWords;
 
     /**
      * @var \Illuminate\Database\Connection
@@ -26,9 +26,9 @@ class Comment extends Grammar
     /**
      * Set table and column comments.
      *
-     * @param  DmBlueprint  $blueprint
+     * @param  YSBlueprint  $blueprint
      */
-    public function setComments(DmBlueprint $blueprint)
+    public function setComments(YSBlueprint $blueprint)
     {
         $this->commentTable($blueprint);
 
@@ -41,9 +41,9 @@ class Comment extends Grammar
      * Run the comment on table statement.
      * Comment set by $table->comment = 'comment';.
      *
-     * @param  DmBlueprint  $blueprint
+     * @param  YSBlueprint  $blueprint
      */
-    private function commentTable(DmBlueprint $blueprint)
+    private function commentTable(YSBlueprint $blueprint)
     {
         $table = $this->wrapValue($blueprint->getTable());
 
@@ -67,9 +67,9 @@ class Comment extends Grammar
      * Add comments set via fluent setter.
      * Comments set by $table->string('column')->comment('comment');.
      *
-     * @param  DmBlueprint  $blueprint
+     * @param  YSBlueprint  $blueprint
      */
-    private function fluentComments(DmBlueprint $blueprint)
+    private function fluentComments(YSBlueprint $blueprint)
     {
         foreach ($blueprint->getColumns() as $column) {
             if (isset($column['comment'])) {
@@ -98,9 +98,9 @@ class Comment extends Grammar
      * Add comments on columns.
      * Comments set by $table->commentColumns = ['column' => 'comment'];.
      *
-     * @param  DmBlueprint  $blueprint
+     * @param  YSBlueprint  $blueprint
      */
-    private function commentColumns(DmBlueprint $blueprint)
+    private function commentColumns(YSBlueprint $blueprint)
     {
         foreach ($blueprint->commentColumns as $column => $comment) {
             $this->commentColumn($blueprint->getTable(), $column, $comment);

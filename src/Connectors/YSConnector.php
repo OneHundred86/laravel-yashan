@@ -1,13 +1,13 @@
 <?php
 
-namespace Lmo\LaravelDm8\Connectors;
+namespace Oh86\LaravelYashan\Connectors;
 
 use Illuminate\Database\Connectors\Connector;
 use Illuminate\Database\Connectors\ConnectorInterface;
 use Illuminate\Support\Arr;
 use PDO;
 
-class DmConnector extends Connector implements ConnectorInterface
+class YSConnector extends Connector implements ConnectorInterface
 {
     /**
      * The default PDO connection options.
@@ -27,15 +27,12 @@ class DmConnector extends Connector implements ConnectorInterface
      * @param  array  $config
      * @return PDO
      */
-    public function connect(array $config)
+    public function connect(array $config): PDO
     {
-        $tns = ! empty($config['tns']) ? $config['tns'] : $this->getDsn($config);
-
         $options = $this->getOptions($config);
+        $dns = $this->getDsn($config);
 
-        $connection = $this->createConnection($tns, $config, $options);
-
-        return $connection;
+        return $this->createConnection($dns, $config, $options);
     }
 
     /**
@@ -44,17 +41,9 @@ class DmConnector extends Connector implements ConnectorInterface
      * @param  array  $config
      * @return string
      */
-    protected function getDsn(array $config)
+    protected function getDsn(array $config): string
     {
-        if (! empty($config['tns'])) {
-            return $config['tns'];
-        }
-
-        // parse configuration
-        $config = $this->parseConfig($config);
-
-        // return generated tns
-        return $config['tns'];
+        return "odbc:DRIVER=YashanDB;SERVER={$config['host']};PORT={$config['port']};DATABASE={$config['database']}";
     }
 
     /**
@@ -67,8 +56,6 @@ class DmConnector extends Connector implements ConnectorInterface
     {
         $config = $this->setHost($config);
         $config = $this->setPort($config);
-        $config = $this->setTNS($config);
-        $config = $this->setCharset($config);
 
         return $config;
     }
@@ -130,20 +117,15 @@ class DmConnector extends Connector implements ConnectorInterface
     /**
      * Create a new PDO connection.
      *
-     * @param  string  $tns
+     * @param  string  $dsn
      * @param  array  $config
      * @param  array  $options
      * @return PDO
      */
-    public function createConnection($tns, array $config, array $options)
+    public function createConnection($dsn, array $config, array $options)
     {
-        // add fallback in case driver is not set, will use pdo instead
-        if (! in_array($config['driver'], ['dm'])) {
-            return parent::createConnection($tns, $config, $options);
-        }
-
         $config = $this->setCharset($config);
         $options['charset'] = $config['charset'];
-        return new PDO($tns, $config['username'], $config['password'], $options);
+        return new PDO($dsn, $config['username'], $config['password'], $options);
     }
 }

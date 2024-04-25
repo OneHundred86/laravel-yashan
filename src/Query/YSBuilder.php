@@ -1,12 +1,12 @@
 <?php
 
-namespace Lmo\LaravelDm8\Query;
+namespace Oh86\LaravelYashan\Query;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 
-class DmBuilder extends Builder
+class YSBuilder extends Builder
 {
     /**
      * Run a pagination count query.
@@ -113,7 +113,7 @@ class DmBuilder extends Builder
      * @param  mixed  $values
      * @param  string  $boolean
      * @param  bool  $not
-     * @return \Illuminate\Database\Query\Builder|DmBuilder
+     * @return \Illuminate\Database\Query\Builder|YSBuilder
      */
     public function whereIn($column, $values, $boolean = 'and', $not = false)
     {

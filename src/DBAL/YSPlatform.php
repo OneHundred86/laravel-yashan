@@ -1,13 +1,13 @@
 <?php
-namespace Lmo\LaravelDm8\DBAL;
+namespace Oh86\LaravelYashan\DBAL;
 
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 /**
- * DmPlatform.
+ * YSPlatform.
  *
  */
-class DmPlatform extends AbstractPlatform
+class YSPlatform extends AbstractPlatform
 {
     /**
      * return string to call a function to get a substring inside an SQL statement
@@ -744,7 +744,7 @@ LEFT JOIN user_cons_columns r_cols
 
     protected function getReservedKeywordsClass()
     {
-        return 'Lmo\LaravelDm8\DBAL\DmKeywords';
+        return 'Oh86\LaravelYashan\DBAL\YSKeywords';
     }
 
     /**

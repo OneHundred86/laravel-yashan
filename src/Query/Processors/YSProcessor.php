@@ -1,6 +1,6 @@
 <?php
 
-namespace Lmo\LaravelDm8\Query\Processors;
+namespace Oh86\LaravelYashan\Query\Processors;
 
 use DateTime;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -8,7 +8,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
 use PDO;
 
-class DmProcessor extends Processor
+class YSProcessor extends Processor
 {
     /**
      * Process an "insert get ID" query.

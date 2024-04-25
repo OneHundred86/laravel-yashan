@@ -1,11 +1,11 @@
 <?php
 
-namespace Lmo\LaravelDm8\Schema;
+namespace Oh86\LaravelYashan\Schema;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 
-class DmAutoIncrementHelper
+class YSAutoIncrementHelper
 {
     /**
      * @var \Illuminate\Database\Connection
@@ -37,7 +37,6 @@ class DmAutoIncrementHelper
      *
      * @param  Blueprint  $blueprint
      * @param  string  $table
-     * @return null
      */
     public function createAutoIncrementObjects(Blueprint $blueprint, $table)
     {
@@ -56,12 +55,11 @@ class DmAutoIncrementHelper
 
         // create sequence for auto increment
         $sequenceName = $this->createObjectName($prefix, $table, $col, 'seq');
-        $this->sequence->create($sequenceName, $start, $column->nocache);
+        $this->sequence->create($sequenceName, $start);
 
-        // create trigger for auto increment work around
-        $triggerName = $this->createObjectName($prefix, $table, $col, 'trg');
-        // echo "createAutoIncrementObjects: $sequenceName, $triggerName\n";
-        $this->trigger->autoIncrement($prefix.$table, $col, $triggerName, $sequenceName);
+        // 序列作用到表的列
+        $sql = sprintf('ALTER TABLE "%s" MODIFY "%s" DEFAULT "%s".NEXTVAL', $table, $col, $sequenceName);
+        $this->connection->statement($sql);
     }
 
     /**
@@ -101,7 +99,6 @@ class DmAutoIncrementHelper
      * Drop sequence and triggers if exists, autoincrement objects.
      *
      * @param  string  $table
-     * @return null
      */
     public function dropAutoIncrementObjects($table)
     {
@@ -109,15 +106,13 @@ class DmAutoIncrementHelper
         $prefix = $this->connection->getTablePrefix();
         // get the actual primary column name from table
         $col = $this->getPrimaryKey($prefix.$table);
+        // var_dump($table, $col);
         // if primary key col is set, drop auto increment objects
         if (isset($col) && ! empty($col)) {
             // drop sequence for auto increment
             $sequenceName = $this->createObjectName($prefix, $table, $col, 'seq');
-            $this->sequence->drop($sequenceName);
 
-            // drop trigger for auto increment work around
-            $triggerName = $this->createObjectName($prefix, $table, $col, 'trg');
-            $this->trigger->drop($triggerName);
+            $this->sequence->drop($sequenceName);
         }
     }
 
@@ -133,19 +128,19 @@ class DmAutoIncrementHelper
             return '';
         }
 
-        $sql = "SELECT cols.column_name
+        $database = $this->connection->getDatabaseName();
+
+        $sql = "SELECT cols.COLUMN_NAME
             FROM all_constraints cons, all_cons_columns cols
-            WHERE cols.table_name = '{$table}'
-                AND cons.constraint_type = 'P'
-                AND cons.constraint_name = cols.constraint_name
-                AND cons.owner = cols.owner
-                AND cols.position = 1
-                AND cons.owner = (select user from dual)
-            ORDER BY cols.table_name, cols.position";
+            WHERE cons.OWNER = cols.OWNER AND cons.CONSTRAINT_NAME = cols.CONSTRAINT_NAME
+            AND cons.TABLE_NAME = cols.TABLE_NAME
+            AND cons.CONSTRAINT_TYPE = 'P'
+            AND cons.OWNER = '{$database}' AND cols.TABLE_NAME = '{$table}'";
+
         $data = $this->connection->selectOne($sql);
 
         if ($data) {
-            return $data->column_name;
+            return $data->COLUMN_NAME;
         }
 
         return '';

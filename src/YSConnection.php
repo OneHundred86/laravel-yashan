@@ -1,27 +1,25 @@
 <?php
 
-namespace Lmo\LaravelDm8;
+namespace Oh86\LaravelYashan;
 
 use Doctrine\DBAL\Driver\OCI8\Driver as DoctrineDriver;
 use Doctrine\DBAL\Version;
-use Exception;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Grammar;
 use Illuminate\Support\Str;
 use PDO;
 use PDOStatement;
 use Throwable;
-use Lmo\LaravelDm8\DBAL\DmDriver;
-use Lmo\LaravelDm8\Query\Grammars\DmGrammar as QueryGrammar;
-use Lmo\LaravelDm8\Query\DmBuilder as QueryBuilder;
-use Lmo\LaravelDm8\Query\Processors\DmProcessor as Processor;
-use Lmo\LaravelDm8\Schema\Grammars\DmGrammar as SchemaGrammar;
-use Lmo\LaravelDm8\Schema\DmBuilder as SchemaBuilder;
-use Lmo\LaravelDm8\Schema\Sequence;
-use Lmo\LaravelDm8\Schema\Trigger;
-use LaravelDm8\DBAL\Dm8\Statement;
+use Oh86\LaravelYashan\DBAL\YSDriver;
+use Oh86\LaravelYashan\Query\Grammars\YSGrammar as QueryGrammar;
+use Oh86\LaravelYashan\Query\YSBuilder as QueryBuilder;
+use Oh86\LaravelYashan\Query\Processors\YSProcessor as Processor;
+use Oh86\LaravelYashan\Schema\Grammars\YSGrammar as SchemaGrammar;
+use Oh86\LaravelYashan\Schema\YSBuilder as SchemaBuilder;
+use Oh86\LaravelYashan\Schema\Sequence;
+use Oh86\LaravelYashan\Schema\Trigger;
 
-class Dm8Connection extends Connection
+class YSConnection extends Connection
 {
     const RECONNECT_ERRORS = 'reconnect_errors';
 
@@ -199,12 +197,12 @@ class Dm8Connection extends Connection
     /**
      * Get doctrine driver.
      *
-     * @return Oci8Driver
+     * @return YSDriver
      */
     protected function getDoctrineDriver()
     {
-        // return class_exists(Version::class) ? new DoctrineDriver : new DmDriver();
-        return new DmDriver();
+        // return class_exists(Version::class) ? new DoctrineDriver : new YSDriver();
+        return new YSDriver();
     }
 
     /**
@@ -250,35 +248,6 @@ class Dm8Connection extends Connection
         $stmt = $this->addBindingsToStatement($stmt, $bindings);
 
         return $stmt->execute();
-    }
-
-    /**
-     * Execute a PL/SQL Procedure and return its cursor result.
-     * Usage: DB::executeProcedureWithCursor($procedureName, $bindings).
-     *
-     * https://docs.oracle.com/cd/E17781_01/appdev.112/e18555/ch_six_ref_cur.htm#TDPPH218
-     *
-     * @param  string  $procedureName
-     * @param  array  $bindings
-     * @param  string  $cursorName
-     * @return array
-     */
-    public function executeProcedureWithCursor($procedureName, array $bindings = [], $cursorName = ':cursor')
-    {
-        $stmt = $this->createStatementFromProcedure($procedureName, $bindings, $cursorName);
-
-        $stmt = $this->addBindingsToStatement($stmt, $bindings);
-
-        $cursor = null;
-        $stmt->bindParam($cursorName, $cursor, PDO::PARAM_STMT);
-        $stmt->execute();
-
-        $statement = new Statement($cursor, $this->getPdo(), $this->getPdo()->getOptions());
-        $statement->execute();
-        $results = $statement->fetchAll(PDO::FETCH_OBJ);
-        $statement->closeCursor();
-
-        return $results;
     }
 
     /**
