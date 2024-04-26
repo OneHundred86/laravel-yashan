@@ -184,15 +184,15 @@ class YSConnection extends Connection
      * @param  string  $format
      * @return $this
      */
-    public function setDateFormat($format = 'YYYY-MM-DD HH24:MI:SS')
-    {
-        $sessionVars = [
-            'NLS_DATE_FORMAT'      => $format,
-            'NLS_TIMESTAMP_FORMAT' => $format,
-        ];
-
-        return $this->setSessionVars($sessionVars);
-    }
+//    public function setDateFormat($format = 'YYYY-MM-DD HH24:MI:SS')
+//    {
+//        $sessionVars = [
+//            'NLS_DATE_FORMAT'      => $format,
+//            'NLS_TIMESTAMP_FORMAT' => $format,
+//        ];
+//
+//        return $this->setSessionVars($sessionVars);
+//    }
 
     /**
      * Get doctrine driver.

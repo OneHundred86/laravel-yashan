@@ -63,7 +63,7 @@ class YSDriver implements \Doctrine\DBAL\Driver
 
     public function getName()
     {
-        return 'dm';
+        return 'yashan';
     }
 
     public function getDatabase(\Doctrine\DBAL\Connection $conn)

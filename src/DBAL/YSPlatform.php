@@ -414,19 +414,11 @@ LEFT JOIN user_cons_columns r_cols
 
     public function getListTableColumnsSQL($table, $database = null)
     {
-        $table = strtoupper($table);
+        $sql = sprintf("SELECT c.*, d.comments FROM all_tab_columns c LEFT JOIN user_col_comments d ON d.TABLE_NAME = c.TABLE_NAME AND d.COLUMN_NAME = c.COLUMN_NAME
+  WHERE c.owner = '%s' AND c.TABLE_NAME = '%s' ORDER BY c.column_name", $database, $table);
+        // var_dump($table, $database, $sql);
 
-        $tabColumnsTableName = "user_tab_columns";
-        $ownerCondition = '';
-        if (null !== $database) {
-            $database = strtoupper($database);
-            $tabColumnsTableName = "all_tab_columns";
-            $ownerCondition = "AND c.owner = '" . $database . "'";
-        }
-
-        return "SELECT c.*, d.comments FROM $tabColumnsTableName c " .
-            "INNER JOIN user_col_comments d ON d.TABLE_NAME = c.TABLE_NAME AND d.COLUMN_NAME = c.COLUMN_NAME " .
-            "WHERE c.table_name = '" . $table . "' " . $ownerCondition . " ORDER BY c.column_name";
+        return $sql;
     }
 
     /**
@@ -466,6 +458,24 @@ LEFT JOIN user_cons_columns r_cols
         return 'DROP USER ' . $database . ' CASCADE';
     }
 
+    public function wrap(string $name)
+    {
+        return sprintf('"%s"', $name);
+    }
+
+    /**
+     * @param string[] $names
+     * @return array
+     */
+    public function wrapArray(array $names): array
+    {
+        $result = [];
+        foreach ($names as $name) {
+            $result[] = $this->wrap($name);
+        }
+        return $result;
+    }
+
     /**
      * Gets the sql statements for altering an existing table.
      *
@@ -480,6 +490,10 @@ LEFT JOIN user_cons_columns r_cols
      */
     public function getAlterTableSQL(TableDiff $diff)
     {
+        // https://doc.yashandb.com/yashandb/23.1/zh/%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/SQL%E5%8F%82%E8%80%83%E6%89%8B%E5%86%8C/SQL%E8%AF%AD%E5%8F%A5/ALTER%20TABLE.html
+        // 有诸多限制，定义为不支持修改表结构。
+        throw new \Exception("不支持 change 表结构");
+
         $sql = array();
         $commentsSQL = array();
         $columnSql = array();
@@ -496,7 +510,7 @@ LEFT JOIN user_cons_columns r_cols
             }
         }
         if (count($fields)) {
-            $sql[] = 'ALTER TABLE ' . $diff->name . ' ADD (' . implode(', ', $fields) . ')';
+            $sql[] = 'ALTER TABLE "' . $diff->name . '" ADD (' . implode(', ', $fields) . ')';
         }
 
         $fields = array();
@@ -506,13 +520,13 @@ LEFT JOIN user_cons_columns r_cols
             }
 
             $column = $columnDiff->column;
-            $fields[] = $column->getQuotedName($this) . ' ' . $this->getColumnDeclarationSQL('', $column->toArray());
+            $fields[] = '"'.$column->getQuotedName($this) . '" ' . $this->getColumnDeclarationSQL('', $column->toArray());
             if ($columnDiff->hasChanged('comment') && $comment = $this->getColumnComment($column)) {
                 $commentsSQL[] = $this->getCommentOnColumnSQL($diff->name, $column->getName(), $comment);
             }
         }
         if (count($fields)) {
-            $sql[] = 'ALTER TABLE ' . $diff->name . ' MODIFY (' . implode(', ', $fields) . ')';
+            $sql[] = 'ALTER TABLE "' . $diff->name . '" MODIFY (' . implode(', ', $fields) . ')';
         }
 
         foreach ($diff->renamedColumns as $oldColumnName => $column) {
@@ -520,7 +534,7 @@ LEFT JOIN user_cons_columns r_cols
                 continue;
             }
 
-            $sql[] = 'ALTER TABLE ' . $diff->name . ' RENAME COLUMN ' . $oldColumnName . ' TO ' . $column->getQuotedName($this);
+            $sql[] = 'ALTER TABLE "' . $diff->name . '" RENAME COLUMN ' . $oldColumnName . ' TO ' . $column->getQuotedName($this);
         }
 
         $fields = array();
@@ -532,14 +546,15 @@ LEFT JOIN user_cons_columns r_cols
             $fields[] = $column->getQuotedName($this);
         }
         if (count($fields)) {
-            $sql[] = 'ALTER TABLE ' . $diff->name . ' DROP (' . implode(', ', $fields) . ')';
+            $fields = $this->wrapArray($fields);
+            $sql[] = 'ALTER TABLE "' . $diff->name . '" DROP (' . implode(', ', $fields) . ')';
         }
 
         $tableSql = array();
 
         if (!$this->onSchemaAlterTable($diff, $tableSql)) {
             if ($diff->newName !== false) {
-                $sql[] = 'ALTER TABLE ' . $diff->name . ' RENAME TO ' . $diff->newName;
+                $sql[] = 'ALTER TABLE "' . $diff->name . '" RENAME TO "' . $diff->newName . '"';
             }
 
             $sql = array_merge($sql, $this->_getAlterTableIndexForeignKeySQL($diff), $commentsSQL);

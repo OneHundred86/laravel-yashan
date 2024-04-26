@@ -17,7 +17,8 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-pdo": "*",
-        "ext-pdo_odbc": "*"
+        "ext-pdo_odbc": "*",
+        "doctrine/dbal": "^2.2"
     },
     "extra": {
         "branch-alias": {
