@@ -54,7 +54,7 @@ class YSAutoIncrementHelper
         $prefix = $this->connection->getTablePrefix();
 
         // create sequence for auto increment
-        $sequenceName = $this->createObjectName($prefix, $table, $col, 'seq');
+        $sequenceName = Sequence::genName($prefix.$table, $col);
         $this->sequence->create($sequenceName, $start);
 
         // 序列作用到表的列
@@ -82,20 +82,6 @@ class YSAutoIncrementHelper
     }
 
     /**
-     * Create an object name that limits to 30 chars.
-     *
-     * @param  string  $prefix
-     * @param  string  $table
-     * @param  string  $col
-     * @param  string  $type
-     * @return string
-     */
-    private function createObjectName($prefix, $table, $col, $type)
-    {
-        return substr($prefix.$table.'_'.$col.'_'.$type, 0, 128);
-    }
-
-    /**
      * Drop sequence and triggers if exists, autoincrement objects.
      *
      * @param  string  $table
@@ -110,9 +96,11 @@ class YSAutoIncrementHelper
         // if primary key col is set, drop auto increment objects
         if (isset($col) && ! empty($col)) {
             // drop sequence for auto increment
-            $sequenceName = $this->createObjectName($prefix, $table, $col, 'seq');
+            $sequenceName = Sequence::genName($prefix.$table, $col);
 
-            $this->sequence->drop($sequenceName);
+            if ($this->sequence->exists($sequenceName)) {
+                $this->sequence->drop($sequenceName);
+            }
         }
     }
 

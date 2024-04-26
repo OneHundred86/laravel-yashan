@@ -20,12 +20,13 @@ class Sequence
         $this->connection = $connection;
     }
 
+    public static function genName($table, $col): string
+    {
+        return "{$table}_{$col}_seq";
+    }
+
     public function create($name, $start = 1, $increment = 1)
     {
-        if (! $name) {
-            return false;
-        }
-
         $sql = sprintf('CREATE SEQUENCE "%s" START WITH %s INCREMENT BY %s', $name, $start, $increment);
         return $this->connection->statement($sql);
     }
@@ -38,11 +39,6 @@ class Sequence
      */
     public function drop($name)
     {
-        // check if a valid name and sequence exists
-        if (! $name || ! $this->exists($name)) {
-            return false;
-        }
-
         return $this->connection->statement(sprintf('DROP SEQUENCE "%s"', $name));
     }
 
@@ -66,16 +62,10 @@ class Sequence
      * @param  string  $name
      * @return int
      */
-//    public function nextValue($name)
-//    {
-//        if (! $name) {
-//            return 0;
-//        }
-//
-//        $name = $this->wrap($name);
-//
-//        return $this->connection->selectOne("SELECT $name.NEXTVAL as \"id\" FROM DUAL")->id;
-//    }
+    public function nextValue($name)
+    {
+        return $this->connection->selectOne("SELECT \"$name\".NEXTVAL as \"id\" FROM DUAL")->id;
+    }
 
     /**
      * same function as lastInsertId. added for clarity with oracle sql statement.
@@ -83,26 +73,19 @@ class Sequence
      * @param  string  $name
      * @return int
      */
-//    public function currentValue($name)
-//    {
-//        return $this->lastInsertId($name);
-//    }
-//
-//    /**
-//     * function to get oracle sequence last inserted id.
-//     *
-//     * @param  string  $name
-//     * @return int
-//     */
-//    public function lastInsertId($name)
-//    {
-//        // check if a valid name and sequence exists
-//        if (! $name || ! $this->exists($name)) {
-//            return 0;
-//        }
-//
-//        $name = $this->wrap($name);
-//
-//        return $this->connection->selectOne("select {$name}.currval as \"id\" from dual")->id;
-//    }
+    public function currentValue($name)
+    {
+        return $this->lastInsertId($name);
+    }
+
+    /**
+     * function to get oracle sequence last inserted id.
+     *
+     * @param  string  $name
+     * @return int
+     */
+    public function lastInsertId($name)
+    {
+        return $this->connection->selectOne("select \"$name\".CURRVAL as \"id\" from dual")->id;
+    }
 }

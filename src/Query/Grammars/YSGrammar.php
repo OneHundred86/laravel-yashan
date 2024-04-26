@@ -281,34 +281,7 @@ class YSGrammar extends Grammar
             return $value;
         }
 
-        // return '`'.str_replace('"', '""', $value).'`';
         return sprintf('"%s"', $value);
-    }
-
-    /**
-     * Compile an insert and get ID statement into SQL.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  array  $values
-     * @param  string  $sequence
-     * @return string
-     */
-    public function compileInsertGetId(Builder $query, $values, $sequence = 'id')
-    {
-        if (empty($sequence)) {
-            $sequence = 'id';
-        }
-
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 4)[2]['object'];
-
-        if ($backtrace instanceof EloquentBuilder) {
-            $model = $backtrace->getModel();
-            if ($model->sequence && ! isset($values[$model->getKeyName()]) && $model->incrementing) {
-                $values[$sequence] = null;
-            }
-        }
-
-        return $this->compileInsert($query, $values).' returning '.$this->wrap($sequence).' into ?';
     }
 
     /**

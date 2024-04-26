@@ -6,6 +6,7 @@ use DateTime;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
+use Oh86\LaravelYashan\Schema\Sequence;
 use PDO;
 
 class YSProcessor extends Processor
@@ -23,20 +24,23 @@ class YSProcessor extends Processor
     {
         $connection = $query->getConnection();
 
-        // $connection->recordsHaveBeenModified();
-        $start = microtime(true);
+        // var_dump($sql, $values, $sequence);
+        // die();
 
-        $id = 0;
-        $parameter = 1;
-        $statement = $this->prepareStatement($query, $sql);
-        $values = $this->incrementBySequence($values, $sequence);
-        $parameter = $this->bindValues($values, $statement, $parameter);
-        $statement->bindParam($parameter, $id, PDO::PARAM_INT, -1);
-        $statement->execute();
+        $connection->insert($sql, $values);
 
-        $connection->logQuery($sql, $values, $start);
+        if ($sequence) {
+            $table = $query->from;
+            $col = $sequence;
 
-        return (int) $id;
+            $sequenceName = Sequence::genName($table, $col);
+            $sequence = new Sequence($connection);
+            if ($sequence->exists($sequenceName)) {
+                return $sequence->lastInsertId($sequenceName);
+            }
+        }
+
+        return 0;
     }
 
     /**
