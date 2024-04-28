@@ -1,8 +1,11 @@
 <?php
+
 namespace Oh86\LaravelYashan\DBAL;
 
+use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+
 /**
  * YSPlatform.
  *
@@ -14,9 +17,9 @@ class YSPlatform extends AbstractPlatform
      *
      * Note: Not SQL92, but common functionality.
      *
-     * @param string $value         an sql string literal or column name/alias
-     * @param integer $position     where to start the substring portion
-     * @param integer $length       the substring portion length
+     * @param string $value an sql string literal or column name/alias
+     * @param integer $position where to start the substring portion
+     * @param integer $length the substring portion length
      * @return string               SQL substring function with given parameters
      * @override
      */
@@ -53,9 +56,9 @@ class YSPlatform extends AbstractPlatform
     /**
      * returns the position of the first occurrence of substring $substr in string $str
      *
-     * @param string $substr    literal string to find
-     * @param string $str       literal string
-     * @param int    $pos       position to start at, beginning of string by default
+     * @param string $substr literal string to find
+     * @param string $str literal string
+     * @param int $pos position to start at, beginning of string by default
      * @return integer
      */
     public function getLocateExpression($str, $substr, $startPos = false)
@@ -343,10 +346,10 @@ class YSPlatform extends AbstractPlatform
     }
 
     /**
+     * @param string $table
+     * @return string
      * @license New BSD License
      * @link http://ezcomponents.org/docs/api/trunk/DatabaseSchema/ezcDbSchemaOracleReader.html
-     * @param  string $table
-     * @return string
      */
     public function getListTableIndexesSQL($table, $currentDatabase = null)
     {
@@ -415,7 +418,7 @@ LEFT JOIN user_cons_columns r_cols
     public function getListTableColumnsSQL($table, $database = null)
     {
         $sql = sprintf("SELECT c.*, d.comments FROM all_tab_columns c LEFT JOIN user_col_comments d ON d.TABLE_NAME = c.TABLE_NAME AND d.COLUMN_NAME = c.COLUMN_NAME
-  WHERE c.owner = '%s' AND c.TABLE_NAME = '%s' ORDER BY c.column_name", $database, $table);
+            WHERE c.owner = '%s' AND c.TABLE_NAME = '%s' ORDER BY c.column_name", $database, $table);
         // var_dump($table, $database, $sql);
 
         return $sql;
@@ -423,7 +426,7 @@ LEFT JOIN user_cons_columns r_cols
 
     /**
      *
-     * @param  \Doctrine\DBAL\Schema\Sequence $sequence
+     * @param \Doctrine\DBAL\Schema\Sequence $sequence
      * @return string
      */
     public function getDropSequenceSQL($sequence)
@@ -436,8 +439,8 @@ LEFT JOIN user_cons_columns r_cols
     }
 
     /**
-     * @param  ForeignKeyConstraint|string $foreignKey
-     * @param  Table|string $table
+     * @param ForeignKeyConstraint|string $foreignKey
+     * @param Table|string $table
      * @return string
      */
     public function getDropForeignKeySQL($foreignKey, $table)
@@ -476,19 +479,106 @@ LEFT JOIN user_cons_columns r_cols
         return $result;
     }
 
+    public function isChangeNullOrNotNullRestraint(Column $oldColumn, Column $newColumn)
+    {
+        return $oldColumn->toArray()["notnull"] != $newColumn->toArray()["notnull"];
+    }
+
+//    public function getDefaultValueDeclarationSQL($column)
+//    {
+//        if (isset($column["nullOrNotNullNotChange"]) && $column["nullOrNotNullNotChange"] === true) {
+//            return "";
+//        }
+//
+//        return parent::getDefaultValueDeclarationSQL($column);
+//    }
+
+    public function getColumnDeclarationSQL($name, array $column)
+    {
+        if (isset($column['columnDefinition'])) {
+            $declaration = $this->getCustomTypeDeclarationSQL($column);
+        } else {
+            $default = $this->getDefaultValueDeclarationSQL($column);
+
+            $charset = isset($column['charset']) && $column['charset'] ?
+                ' ' . $this->getColumnCharsetDeclarationSQL($column['charset']) : '';
+
+            $collation = isset($column['collation']) && $column['collation'] ?
+                ' ' . $this->getColumnCollationDeclarationSQL($column['collation']) : '';
+
+            if (isset($column["nullOrNotNullNotChange"]) && $column["nullOrNotNullNotChange"] === true) {
+                $notnull = "";
+            }else {
+                $notnull = isset($column['notnull']) && $column['notnull'] ? ' NOT NULL' : ' NULL';
+            }
+
+            $unique = isset($column['unique']) && $column['unique'] ?
+                ' ' . $this->getUniqueFieldDeclarationSQL() : '';
+
+            $check = isset($column['check']) && $column['check'] ?
+                ' ' . $column['check'] : '';
+
+            $typeDecl    = $column['type']->getSQLDeclaration($column, $this);
+            $declaration = $typeDecl . $charset . $default . $notnull . $unique . $check . $collation;
+
+            if ($this->supportsInlineColumnComments() && isset($column['comment']) && $column['comment'] !== '') {
+                $declaration .= ' ' . $this->getInlineColumnCommentSQL($column['comment']);
+            }
+        }
+
+        return $name . ' ' . $declaration;
+    }
+
     /**
      * Gets the sql statements for altering an existing table.
      *
      * The method returns an array of sql statements, since some platforms need several statements.
      *
-     * @param string $diff->name          name of the table that is intended to be changed.
-     * @param array $changes        associative array that contains the details of each type      *
-     * @param boolean $check        indicates whether the function should just check if the DBMS driver
+     * @param string $diff ->name          name of the table that is intended to be changed.
      *                              can perform the requested table alterations if the value is true or
      *                              actually perform them otherwise.
      * @return array
      */
     public function getAlterTableSQL(TableDiff $diff)
+    {
+        $alterColumnSqlArr = [];
+        $commentSqlArr = [];
+
+        /** @var \Doctrine\DBAL\Schema\ColumnDiff $columnDiff */
+        foreach ($diff->changedColumns as $columnDiff) {
+            $oldColumn = $diff->fromTable->getColumn($columnDiff->oldColumnName);
+            $newColumn = $columnDiff->column;
+
+            // var_dump($oldColumn->toArray(), $newColumn->toArray());
+
+            $newColumnDefinitionArray = $newColumn->toArray();
+            if (!$this->isChangeNullOrNotNullRestraint($oldColumn, $newColumn)) {
+                $newColumnDefinitionArray["nullOrNotNullNotChange"] = true;
+            }
+
+            // var_dump($newColumnDefinitionArray);
+
+            $columnDeclarationSQL = $this->getColumnDeclarationSQL($this->wrap($newColumn->getName()), $newColumnDefinitionArray);
+            // var_dump($columnDeclarationSQL);
+
+            $alterColumnSqlArr[] = sprintf("ALTER TABLE %s MODIFY %s",
+                $this->wrap($diff->name),
+                $columnDeclarationSQL);
+
+            if (isset($newColumnDefinitionArray["comment"]) && $newColumnDefinitionArray["comment"]) {
+                $commentSqlArr[] = sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
+                    $this->wrap($diff->name),
+                    $this->wrap($newColumn->getName()),
+                    $newColumnDefinitionArray["comment"]);
+            }
+        }
+
+        //var_dump($alterColumnSqlArr, $commentSqlArr);
+        //die();
+        return array_merge($alterColumnSqlArr, $commentSqlArr);
+    }
+
+    public function getAlterTableSQLBak(TableDiff $diff)
     {
         // https://doc.yashandb.com/yashandb/23.1/zh/%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/SQL%E5%8F%82%E8%80%83%E6%89%8B%E5%86%8C/SQL%E8%AF%AD%E5%8F%A5/ALTER%20TABLE.html
         // 有诸多限制，定义为不支持修改表结构。
@@ -520,7 +610,7 @@ LEFT JOIN user_cons_columns r_cols
             }
 
             $column = $columnDiff->column;
-            $fields[] = '"'.$column->getQuotedName($this) . '" ' . $this->getColumnDeclarationSQL('', $column->toArray());
+            $fields[] = '"' . $column->getQuotedName($this) . '" ' . $this->getColumnDeclarationSQL('', $column->toArray());
             if ($columnDiff->hasChanged('comment') && $comment = $this->getColumnComment($column)) {
                 $commentsSQL[] = $this->getCommentOnColumnSQL($diff->name, $column->getName(), $comment);
             }
@@ -591,15 +681,15 @@ LEFT JOIN user_cons_columns r_cols
     /**
      * Adds an driver-specific LIMIT clause to the query
      *
-     * @param string $query         query to modify
-     * @param integer $limit        limit the number of rows
-     * @param integer $offset       start reading from given offset
+     * @param string $query query to modify
+     * @param integer $limit limit the number of rows
+     * @param integer $offset start reading from given offset
      * @return string               the modified query
      */
     protected function doModifyLimitQuery($query, $limit, $offset = null)
     {
-        $limit = (int) $limit;
-        $offset = (int) $offset;
+        $limit = (int)$limit;
+        $offset = (int)$offset;
         if (preg_match('/^\s*SELECT/i', $query)) {
             if (!preg_match('/\sFROM\s/i', $query)) {
                 $query .= " FROM dual";
@@ -718,31 +808,31 @@ LEFT JOIN user_cons_columns r_cols
     protected function initializeDoctrineTypeMappings()
     {
         $this->doctrineTypeMapping = array(
-            'integer'           => 'integer',
-            'number'            => 'integer',
-            'pls_integer'       => 'boolean',
-            'binary_integer'    => 'boolean',
-            'varchar'           => 'string',
-            'varchar2'          => 'string',
-            'nvarchar2'         => 'string',
-            'char'              => 'string',
-            'nchar'             => 'string',
-            'date'              => 'datetime',
-            'timestamp'         => 'datetime',
-            'timestamptz'       => 'datetimetz',
-            'float'             => 'float',
-            'long'              => 'string',
-            'clob'              => 'text',
-            'nclob'             => 'text',
-            'raw'               => 'text',
-            'long raw'          => 'text',
-            'rowid'             => 'string',
-            'urowid'            => 'string',
-            'blob'              => 'blob',
-            'int'               => 'integer',
-            'smallint'          => 'integer',
-            'bigint'            => 'integer',
-            'tinyint'           => 'integer',
+            'integer' => 'integer',
+            'number' => 'integer',
+            'pls_integer' => 'boolean',
+            'binary_integer' => 'boolean',
+            'varchar' => 'string',
+            'varchar2' => 'string',
+            'nvarchar2' => 'string',
+            'char' => 'string',
+            'nchar' => 'string',
+            'date' => 'datetime',
+            'timestamp' => 'datetime',
+            'timestamptz' => 'datetimetz',
+            'float' => 'float',
+            'long' => 'string',
+            'clob' => 'text',
+            'nclob' => 'text',
+            'raw' => 'text',
+            'long raw' => 'text',
+            'rowid' => 'string',
+            'urowid' => 'string',
+            'blob' => 'blob',
+            'int' => 'integer',
+            'smallint' => 'integer',
+            'bigint' => 'integer',
+            'tinyint' => 'integer',
         );
     }
 
