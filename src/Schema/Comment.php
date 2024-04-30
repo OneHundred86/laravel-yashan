@@ -60,7 +60,8 @@ class Comment extends Grammar
      */
     protected function wrapValue($value)
     {
-        return $this->isReserved($value) ? parent::wrapValue($value) : $value;
+        // return $this->isReserved($value) ? parent::wrapValue($value) : $value;
+        return parent::wrapValue($value);
     }
 
     /**
@@ -91,7 +92,7 @@ class Comment extends Grammar
         $table = $this->connection->getTablePrefix().$table;
         $column = $this->wrapValue($column);
 
-        $this->connection->statement("comment on column \"{$table}\".\"{$column}\" is '{$comment}'");
+        $this->connection->statement("comment on column {$table}.{$column} is '{$comment}'");
     }
 
     /**

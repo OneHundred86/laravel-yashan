@@ -15,10 +15,10 @@ class YSConnector extends Connector implements ConnectorInterface
      * @var array
      */
     protected $options = [
-        PDO::CASE_LOWER               => PDO::CASE_LOWER,
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_ORACLE_NULLS       => PDO::NULL_NATURAL,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+        PDO::ATTR_CASE => PDO::CASE_NATURAL,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_STRINGIFY_FETCHES => false,
+        PDO::ATTR_EMULATE_PREPARES => false,
     ];
 
     /**
@@ -125,7 +125,9 @@ class YSConnector extends Connector implements ConnectorInterface
     public function createConnection($dsn, array $config, array $options)
     {
         $config = $this->setCharset($config);
-        $options['charset'] = $config['charset'];
+        // var_dump($options);
+        // dd(getenv());
+
         return new PDO($dsn, $config['username'], $config['password'], $options);
     }
 }

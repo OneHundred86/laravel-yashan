@@ -10,7 +10,7 @@ class YSKeywords extends KeywordList {
 
     public function getName()
     {
-        return 'Dm';
+        return 'yashan';
     }
 
     protected function getKeywords()

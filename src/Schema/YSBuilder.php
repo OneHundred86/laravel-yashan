@@ -109,7 +109,21 @@ class YSBuilder extends Builder
      */
     public function dropAllTables()
     {
-        $this->connection->statement($this->grammar->compileDropAllTables());
+        // $this->connection->statement($this->grammar->compileDropAllTables());
+
+        foreach ($this->getAllTables() as $table) {
+            $this->drop($table);
+        }
+    }
+
+    public function getAllTables()
+    {
+        $results = $this->connection->select($this->grammar->compileGetAllTables());
+        $tables = [];
+        foreach ($results as $result) {
+            $tables[] = $result->TABLE_NAME;
+        }
+        return $tables;
     }
 
     /**
@@ -154,7 +168,7 @@ class YSBuilder extends Builder
      */
     public function getColumnListing($table)
     {
-        $database = $this->connection->getConfig('username');
+        $database = $this->connection->getConfig('database');
         $table = $this->connection->getTablePrefix().$table;
         $grammar = $this->grammar;
         $results = $this->connection->select($grammar->compileColumnExists($database, $table));

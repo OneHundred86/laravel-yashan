@@ -254,7 +254,7 @@ class YSPlatform extends AbstractPlatform
      */
     public function getDateTimeTzTypeDeclarationSQL(array $fieldDeclaration)
     {
-        return 'TIMESTAMP WITH TIME ZONE';
+        return 'TIMESTAMP';
     }
 
     /**
@@ -418,7 +418,7 @@ LEFT JOIN user_cons_columns r_cols
     public function getListTableColumnsSQL($table, $database = null)
     {
         $sql = sprintf("SELECT c.*, d.comments FROM all_tab_columns c LEFT JOIN user_col_comments d ON d.TABLE_NAME = c.TABLE_NAME AND d.COLUMN_NAME = c.COLUMN_NAME
-            WHERE c.owner = '%s' AND c.TABLE_NAME = '%s' ORDER BY c.column_name", $database, $table);
+            WHERE c.owner = '%s' AND c.TABLE_NAME = '%s' ORDER BY c.COLUMN_ID", $database, $table);
         // var_dump($table, $database, $sql);
 
         return $sql;
@@ -479,6 +479,12 @@ LEFT JOIN user_cons_columns r_cols
         return $result;
     }
 
+    /**
+     * null 变成 not null，或者not null变成null
+     * @param Column $oldColumn
+     * @param Column $newColumn
+     * @return bool
+     */
     public function isChangeNullOrNotNullRestraint(Column $oldColumn, Column $newColumn)
     {
         return $oldColumn->toArray()["notnull"] != $newColumn->toArray()["notnull"];
@@ -536,7 +542,7 @@ LEFT JOIN user_cons_columns r_cols
      *
      * @param string $diff ->name          name of the table that is intended to be changed.
      *                              can perform the requested table alterations if the value is true or
-     *                              actually perform them otherwise.
+     *                              actuallym them otherwise.
      * @return array
      */
     public function getAlterTableSQL(TableDiff $diff)
@@ -549,7 +555,8 @@ LEFT JOIN user_cons_columns r_cols
             $oldColumn = $diff->fromTable->getColumn($columnDiff->oldColumnName);
             $newColumn = $columnDiff->column;
 
-            // var_dump($oldColumn->toArray(), $newColumn->toArray());
+//            var_dump($oldColumn->toArray(), $newColumn->toArray());
+//            die();
 
             $newColumnDefinitionArray = $newColumn->toArray();
             if (!$this->isChangeNullOrNotNullRestraint($oldColumn, $newColumn)) {
@@ -564,6 +571,8 @@ LEFT JOIN user_cons_columns r_cols
             $alterColumnSqlArr[] = sprintf("ALTER TABLE %s MODIFY %s",
                 $this->wrap($diff->name),
                 $columnDeclarationSQL);
+
+
 
             if (isset($newColumnDefinitionArray["comment"]) && $newColumnDefinitionArray["comment"]) {
                 $commentSqlArr[] = sprintf("COMMENT ON COLUMN %s.%s IS '%s'",
@@ -735,12 +744,12 @@ LEFT JOIN user_cons_columns r_cols
 
     public function getDateFormatString()
     {
-        return 'Y-m-d 00:00:00';
+        return 'Y-m-d';
     }
 
     public function getTimeFormatString()
     {
-        return '1900-01-01 H:i:s';
+        return 'H:i:s';
     }
 
     public function fixSchemaElementName($schemaElementName)

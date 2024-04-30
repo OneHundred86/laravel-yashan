@@ -19,6 +19,7 @@ yasboot cluster restart -c yashandb
 CREATE USER yhzx IDENTIFIED BY yhzx123;
 GRANT CREATE SESSION TO yhzx;
 GRANT CREATE TABLE TO yhzx;
+GRANT ALTER SESSION TO yhzx;
 GRANT RESOURCE TO yhzx;
 
 -- 删除用户

@@ -264,8 +264,8 @@ class YSSchemaManager extends AbstractSchemaManager
             $this->dropTable($name);
         }
         $seqs = $this->listSequences();
-        foreach ($seqs as &$seq) {
-            $this->dropSequence($name);
+        foreach ($seqs as $seq) {
+            $this->dropSequence($seq->getName());
         }
     }
 }

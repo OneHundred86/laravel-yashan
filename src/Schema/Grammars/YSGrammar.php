@@ -196,6 +196,11 @@ class YSGrammar extends Grammar
         return 'select * from all_tables where owner = ? and table_name = ?';
     }
 
+    public function compileGetAllTables()
+    {
+        return 'SELECT TABLE_NAME FROM USER_TABLES';
+    }
+
     /**
      * Compile the query to determine the list of columns.
      *
@@ -205,7 +210,7 @@ class YSGrammar extends Grammar
      */
     public function compileColumnExists($database, $table)
     {
-        return "select column_name from all_tab_cols where owner = '{$database}' and table_name = '{$table}'";
+        return "select COLUMN_NAME from ALL_TAB_COLS WHERE OWNER = '{$database}' AND TABLE_NAME = '{$table}'";
     }
 
     /**
@@ -710,7 +715,7 @@ class YSGrammar extends Grammar
      */
     protected function typeTimestamp(Fluent $column)
     {
-        return 'timestamp(0)';
+        return 'timestamp';
     }
 
     /**
@@ -721,7 +726,7 @@ class YSGrammar extends Grammar
      */
     protected function typeTimestampTz(Fluent $column)
     {
-        return 'timestamp with time zone';
+        return 'timestamp';
     }
 
     /**

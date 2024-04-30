@@ -6,11 +6,40 @@ use DateTime;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
+use Illuminate\Support\Carbon;
 use Oh86\LaravelYashan\Schema\Sequence;
 use PDO;
 
 class YSProcessor extends Processor
 {
+    /**
+     * Process the results of a "select" query.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $results
+     * @return array
+     */
+    public function processSelect(Builder $query, $results)
+    {
+        // var_dump(__METHOD__, get_class($query), $results);
+        $this->handleTimestampColumns($query, $results);
+        return $results;
+    }
+
+    public function handleTimestampColumns(Builder $query, &$results)
+    {
+        $dateFormat = $query->getGrammar()->getDateFormat();
+
+        foreach (["created_at", "updated_at", "deleted_at"] as $key) {
+            /** @var \StdClass $result */
+            foreach ($results as $result) {
+                if (isset($result->$key)) {
+                    $result->$key = Carbon::parse($result->$key)->format($dateFormat);
+                }
+            }
+        }
+    }
+
     /**
      * Process an "insert get ID" query.
      *
@@ -24,20 +53,18 @@ class YSProcessor extends Processor
     {
         $connection = $query->getConnection();
 
-        // var_dump($sql, $values, $sequence);
-        // die();
+//        var_dump($sql, $values, $sequence);
+//        die();
 
         $connection->insert($sql, $values);
 
-        if ($sequence) {
+        if ($sequence && !isset($values[$sequence])) {
             $table = $query->from;
             $col = $sequence;
 
             $sequenceName = Sequence::genName($table, $col);
             $sequence = new Sequence($connection);
-            if ($sequence->exists($sequenceName)) {
-                return $sequence->lastInsertId($sequenceName);
-            }
+            return $sequence->lastInsertId($sequenceName);
         }
 
         return 0;
@@ -57,33 +84,6 @@ class YSProcessor extends Processor
         $pdo = $connection->getPdo();
 
         return $pdo->prepare($sql);
-    }
-
-    /**
-     * Insert a new record and get the value of the primary key.
-     *
-     * @param  array  $values
-     * @param  string  $sequence
-     * @return array
-     */
-    protected function incrementBySequence(array $values, $sequence)
-    {
-        $builder = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[3]['object'];
-        $builderArgs = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[2]['args'];
-
-        if (! isset($builderArgs[1][0][$sequence])) {
-            if ($builder instanceof EloquentBuilder) {
-                /** @var DmEloquent $model */
-                $model = $builder->getModel();
-                /** @var Dm8Connection $connection */
-                $connection = $model->getConnection();
-                if ($model->sequence && $model->incrementing) {
-                    $values[] = (int) $connection->getSequence()->nextValue($model->sequence);
-                }
-            }
-        }
-
-        return $values;
     }
 
     /**
@@ -187,7 +187,7 @@ class YSProcessor extends Processor
         $mapping = function ($r) {
             $r = (object) $r;
 
-            return strtolower($r->column_name);
+            return strtolower($r->COLUMN_NAME);
         };
 
         return array_map($mapping, $results);
