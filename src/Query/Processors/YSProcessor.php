@@ -100,21 +100,52 @@ class YSProcessor extends Processor
     {
         $connection = $query->getConnection();
 
-//        var_dump($sql, $values, $sequence);
-//        die();
+        // var_dump($sql, $values, $sequence);
+        // die();
 
         $connection->insert($sql, $values);
 
-        if ($sequence && !isset($values[$sequence])) {
-            $table = $query->from;
-            $col = $sequence;
+        // if ($sequence && !isset($values[$sequence])) {
+        if ($sequence) {
+            $pos = $this->getPropertyPosOfInsertSql($sql, $sequence);
 
-            $sequenceName = Sequence::genName($table, $col);
-            $sequence = new Sequence($connection);
-            return $sequence->lastInsertId($sequenceName);
+            // 没有指定自增列
+            if ($pos === false) {
+                $table = $query->from;
+                $col = $sequence;
+
+                $sequenceName = Sequence::genName($table, $col);
+                $sequence = new Sequence($connection);
+                return $sequence->lastInsertId($sequenceName);
+            }else {
+                return $values[$pos];
+            }
         }
 
         return 0;
+    }
+
+    /**
+     * @param string $sql
+     * @param string $propertyName
+     * @return false | int
+     */
+    private function getPropertyPosOfInsertSql(string $sql, string $propertyName)
+    {
+        if (preg_match('/\(.*?\)/', $sql, $m)){
+            $propertyNamesSql = $m[0];
+
+            if (preg_match_all('/"([\w-]+?)"/', $propertyNamesSql, $matches)) {
+                $propertyNames = $matches[1];
+                foreach ($propertyNames as $pos => $name) {
+                    if ($propertyName == $name) {
+                        return $pos;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
