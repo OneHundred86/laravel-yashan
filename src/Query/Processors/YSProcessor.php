@@ -3,7 +3,6 @@
 namespace Oh86\LaravelYashan\Query\Processors;
 
 use DateTime;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
 use Illuminate\Support\Carbon;
@@ -22,22 +21,70 @@ class YSProcessor extends Processor
     public function processSelect(Builder $query, $results)
     {
         // var_dump(__METHOD__, get_class($query), $results);
-        $this->handleTimestampColumns($query, $results);
-        return $results;
-    }
 
-    public function handleTimestampColumns(Builder $query, &$results)
-    {
-        $dateFormat = $query->getGrammar()->getDateFormat();
+        foreach ($results as &$obj) {
+            foreach ($obj as $key => $val) {
+                if ($this->handleTimestampValue($query, $obj, $key, $val)){
+                    continue;
+                }
 
-        foreach (["created_at", "updated_at", "deleted_at"] as $key) {
-            /** @var \StdClass $result */
-            foreach ($results as $result) {
-                if (isset($result->$key)) {
-                    $result->$key = Carbon::parse($result->$key)->format($dateFormat);
+                if ($this->handleNumericValue($query, $obj, $key, $val)){
+                    continue;
                 }
             }
         }
+
+        return $results;
+    }
+
+    /**
+     * 处理timestamp值
+     * @param Builder $query
+     * @param $obj
+     * @param $key
+     * @param $val
+     * @return bool
+     */
+    protected function handleTimestampValue(Builder $query, $obj, $key, $val): bool
+    {
+        $dateFormat = $query->getGrammar()->getDateFormat();
+        // 固定处理created_at、updated_at和deleted_at这三列数据
+        $timestampColumns = ["created_at", "updated_at", "deleted_at"];
+
+        if (in_array($key, $timestampColumns)) {
+            $obj->$key = Carbon::parse($val)->format($dateFormat);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 处理数字值
+     * @param Builder $query
+     * @param $obj
+     * @param $key
+     * @param $val
+     * @return bool
+     */
+    protected function handleNumericValue(Builder $query, $obj, $key, $val): bool
+    {
+        if (is_numeric($val)) {
+            if ($this->isFloat($val)){
+                $obj->$key = doubleval($val);
+            }else {
+                $obj->$key = intval($val);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function isFloat($val): bool
+    {
+        return (bool) preg_match('/^-?\d+\.\d+$/', $val);
     }
 
     /**
